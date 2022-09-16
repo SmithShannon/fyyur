@@ -37,10 +37,10 @@ class Venue(db.Model):
     __tablename__ = 'Venue'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
+    name = db.Column(db.String,unique=True,nullable=False)
     city_id = db.Column(db.Integer, db.ForeignKey('City.id'),nullable=False)
-    address = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
+    address = db.Column(db.String(120),nullable=False)
+    phone = db.Column(db.String(120),nullable=False)
     image_link = db.Column(db.String(900))
     facebook_link = db.Column(db.String(120))
     seeking_talent = db.Column(db.Boolean)
@@ -56,9 +56,9 @@ class Artist(db.Model):
     __tablename__ = 'Artist'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
+    name = db.Column(db.String,unique=True)
     city_id = db.Column(db.Integer,db.ForeignKey('City.id'),nullable=False)
-    phone = db.Column(db.String(120))
+    phone = db.Column(db.String(120),nullable=False)
     image_link = db.Column(db.String(900))
     facebook_link = db.Column(db.String(120))
     website = db.Column(db.String)
@@ -80,6 +80,7 @@ class Show (db.Model):
   artist_id = db.Column(db.Integer,db.ForeignKey('Artist.id'),nullable=False)
   venue_id = db.Column(db.Integer,db.ForeignKey('Venue.id'),nullable=False)
 
+#Noticed that there was sorting based on city.  Its easier that it is its own table.
 class City(db.Model):
   __tablename__ = 'City'
 
@@ -90,6 +91,7 @@ class City(db.Model):
   venue_rel = db.relationship('Venue',backref='cvenues',lazy=False)
   artist_rel = db.relationship('Artist',backref='cartists',lazy=False)
 
+#A venue and artist can have many genres, and a genre can be done by many venues and artists.
 class Genre (db.Model):
   __tablename__ = 'Genre'
 
@@ -258,6 +260,9 @@ def create_venue_submission():
       db.session.commit()
     #Next genres
     genres = []
+    if len(request.form.getlist('genres')) == 0:
+      flash ("Please select a genre")
+      return render_template("/venues/create")
     for genre in request.form.getlist('genres'):
       g = Genre.query.filter_by(name=genre).first()
       if g is None:
